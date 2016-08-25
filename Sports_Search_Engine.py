@@ -1,28 +1,37 @@
 # W5D2
-
-import csv
 import psycopg2
 
 
-def report_print():
+def get_all_data():
     conn = psycopg2.connect("dbname=nfl_data user=RobertWard")
     cur = conn.cursor()
     cur.execute("SELECT * FROM nflTable;")
     items = cur.fetchall()
-    # print(items)
+    cur.close()
+    conn.close()
+    return items
+
+
+def report_print():
+    items = get_all_data()
+    print_all_stats(items)
+
+
+def print_all_stats(items):
     print("\n"*60)
     print("IDX\tRank\tName\t\t\t\tteam\tGmsSt\tAtts\tYards\tRecTDs\tTarget\tRecps\tR-Yards\tR-TDs")
     for each in items:
         for every in each:
-            print(every,"\t",end='')
+            print(every, "\t", end='')
         print("\n")
+
 
 def what_to_do():
     while True:
         print("\n"*60)
         ent = input("Would you like to:\t(P)rint your player report\n\t\t\t(S)earch\n\t\t\t(A)dd\n\t \t\t(D)elete a player?  ")
         entry = ent.lower()
-        if entry == 's' or entry =='a' or entry == 'd' or entry == 'p':
+        if entry == 's' or entry == 'a' or entry == 'd' or entry == 'p':
             return entry
 
 
@@ -42,6 +51,9 @@ def add_a_player():
         cur = conn.cursor()
         cur.execute("INSERT INTO nflTable (rank, name, team, gamestart, attempts, yard, rTDs, target, receptions, yards, pTDs) VALUES (%s, %s, %s, %s, %s, %s, %s, %s, %s, %s, %s);", (new_player[0], new_player[1], new_player[2], new_player[3], new_player[4], new_player[5], new_player[6], new_player[7], new_player[8], new_player[9], new_player[10]))
         conn.commit()
+        cur.close()
+        conn.close()
+        # WHERE NOT EXISTS (SELECT id FROM example_table WHERE id = 1);
 
 
 def search_player():
@@ -65,31 +77,24 @@ def search_player():
     if place == 3:
         return place, entry
 
-    conn = psycopg2.connect("dbname=nfl_data user=RobertWard")
-    cur = conn.cursor()
-    cur.execute("SELECT * FROM nflTable;")
-    items = cur.fetchall()
+    items = get_all_data()
     for i, each in enumerate(items):
         if each[place] == entry:
-            print("\n",each,"\n")
+            print("\n", each, "\n")
             return 0, each
 
 
 def prt_all_matching(entry):
     report = []
-    conn = psycopg2.connect("dbname=nfl_data user=RobertWard")
-    cur = conn.cursor()
-    cur.execute("SELECT * FROM nflTable;")
-    items = cur.fetchall()
+    items = get_all_data()
     for i, each in enumerate(items):
         if each[place] == entry:
             report.append(each)
-
     print("\n"*60)
     print("IDX\tRank\tName\t\t\t\tteam\tGmsSt\tAtts\tYards\tRecTDs\tTarget\tRecps\tR-Yards\tR-TDs")
     for each in report:
         for every in each:
-            print(every,"\t",end='')
+            print(every, "\t", end='')
         print("\n")
 
 
@@ -109,8 +114,10 @@ def del_player():
                 item = cur.fetchone()
             thisone = item[2]
             print(type(item[2]))
-            cur.execute("DELETE FROM nflTable WHERE name=%s;",(thisone,))
+            cur.execute("DELETE FROM nflTable WHERE name=%s;", (thisone,))
             conn.commit()
+            cur.close()
+            conn.close()
 
 
 # =============================   MAIN   ==============================
